@@ -8,11 +8,14 @@ const HomePage = () => {
   const [users, setUsers] = useState([]);
   const [conversations, setConversations] = useState([]);
   const [chats, setChats] = useState([]); // State to hold chats
+  const [searchQuery, setSearchQuery] = useState(""); // State for search query
+  const [filteredUsers, setFilteredUsers] = useState([]); // State for filtered user list
 
   useEffect(() => {
     const fetchData = async () => {
       const usersResponse = await axios.get("/api/users");
       setUsers(usersResponse.data);
+      setFilteredUsers(usersResponse.data); // Set initial filtered users
 
       const conversationsResponse = await axios.get("/api/conversations");
       setConversations(conversationsResponse.data);
@@ -25,10 +28,34 @@ const HomePage = () => {
     fetchData();
   }, []);
 
+  // Update filtered users when search query changes
+  useEffect(() => {
+    const result = users.filter((user) =>
+      user.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    setFilteredUsers(result);
+  }, [searchQuery, users]);
+
   return (
-    <div className="flex">
-      <UserList users={users} />
-      <ChatList chats={chats} /> {/* Display chat list */}
+    <div className="flex flex-col">
+      <div className="mb-4">
+        {/* Search input */}
+        <input
+          type="text"
+          placeholder="Search users..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="border p-2 rounded-md w-full"
+        />
+      </div>
+
+      <div className="flex">
+        {/* Conditionally display UserList only if searchQuery has value */}
+        {searchQuery.trim() && <UserList users={filteredUsers} />}
+
+        {/* Display chat list */}
+        <ChatList chats={chats} />
+      </div>
     </div>
   );
 };
